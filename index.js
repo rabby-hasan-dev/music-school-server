@@ -57,6 +57,20 @@ async function run() {
             const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRETE, { expiresIn: '1h' })
             res.send({ token });
         })
+         //  warning: use verifyJWT before using verifyAdmin
+         const verifyAdmin = async (req, res, next) => {
+            const email = req.decoded.email;
+            const query = { email: email };
+            const user = await allUsersCollection.findOne(query);
+            if (user?.role !== 'admin') {
+                return res.status(403).send({ error: true, message: 'forbidden access' })
+            }
+
+            next();
+
+
+        }
+
 
         // Class relate api
         app.get('/allClasses', async (req, res) => {
@@ -75,13 +89,13 @@ async function run() {
 
         // users related api
 
-        app.get('/allUsers', async (req, res) => {
+        app.get('/allUsers',verifyJWT,verifyAdmin, async (req, res) => {
 
             const result = await allUsersCollection.find().toArray();
             res.send(result);
 
         })
-        app.post('/allUsers', async (req, res) => {
+        app.post('/allUsers', verifyJWT, async (req, res) => {
             const users = req.body;
             const query = { email: users.email };
             const existingUser = await allUsersCollection.findOne(query);
@@ -90,6 +104,14 @@ async function run() {
 
             }
             const result = await allUsersCollection.insertOne(users);
+            res.send(result);
+
+        })
+
+        app.delete('/allUsers/:id', async (req, res) => {
+            const id=req.params.id;
+            const query={_id: new ObjectId(id)}
+            const result = await allUsersCollection.deleteOne(query);
             res.send(result);
 
         })
