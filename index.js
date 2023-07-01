@@ -1,9 +1,9 @@
 const express = require('express');
 const app = express();
 const cors = require('cors');
-
 require('dotenv').config()
 var jwt = require('jsonwebtoken');
+const stripe = require('stripe')(process.env.VITE_payment_secrete_key)
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
 
@@ -51,6 +51,7 @@ async function run() {
         const allInstructorsCollection = client.db("musicSchool").collection('all_Instructors');
         const allUsersCollection = client.db("musicSchool").collection('allUsers');
         const selectedClassCollection = client.db("musicSchool").collection('selected_class');
+        const paymentCollection = client.db("musicSchool").collection('payments');
 
         // jwt api
         app.post('/jwt', (req, res) => {
@@ -219,6 +220,52 @@ async function run() {
             };
             const result = await allUsersCollection.updateOne(filter, updateDoc);
             res.send(result);
+        })
+
+        // Create payment intent
+        app.post("/create-payment-intent", verifyJWT, async (req, res) => {
+
+            const { price } = req.body;
+            const amount = parseInt(price * 100);
+
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: "usd",
+                payment_method_types: ["card"],
+
+            })
+
+            res.send({
+                clientSecret: paymentIntent.client_secret
+            })
+
+        });
+
+        // payment related api
+
+        app.get('/payments', async (req, res) => {
+            let query = {};
+            if (req.query?.email) {
+                query = { email: req.query.email }
+                const result = await paymentCollection.find(query).toArray();
+                return res.send(result);
+            }
+            const result = await paymentCollection.find().toArray();
+            res.send(result);
+
+        })
+        app.post('/payments', async (req, res) => {
+            const payment = req.body;
+            const insertResult = await paymentCollection.insertOne(payment);
+
+            const query = {
+                _id: {
+                    $in: payment.selectedClassId
+                        .map(id => new ObjectId(id))
+                }
+            }
+            const deleteResult = await selectedClassCollection.deleteMany(query);
+            res.send({ insertResult, deleteResult });
         })
 
 
