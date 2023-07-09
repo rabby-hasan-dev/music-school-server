@@ -244,6 +244,7 @@ async function run() {
         // payment related api
 
         app.get('/payments', async (req, res) => {
+
             let query = {};
             if (req.query?.email) {
                 query = { email: req.query.email }
