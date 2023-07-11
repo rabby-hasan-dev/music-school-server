@@ -123,9 +123,41 @@ async function run() {
                     descriptions: classes.descriptions,
                 }
             }
-
-
             const result = await allClassesCollection.updateOne(filter, updateClasses)
+            res.send(result);
+        })
+
+            // approved api
+            app.patch('/allClasses/approved/:id', async (req, res) => {
+                const id = req.params.id
+
+                const filter = { _id: new ObjectId(id) };
+                const approvedClass = {
+                    $set: {
+                        status: "approved",
+
+                    }
+                }
+
+
+            const result = await allClassesCollection.updateOne(filter, approvedClass)
+            res.send(result);
+
+        })
+            // deny api
+            app.patch('/allClasses/deny/:id', async (req, res) => {
+                const id = req.params.id
+
+                const filter = { _id: new ObjectId(id) };
+                const denyClass = {
+                    $set: {
+                        status: "denied",
+
+                    }
+                }
+
+
+            const result = await allClassesCollection.updateOne(filter, denyClass)
             res.send(result);
 
         })
