@@ -91,9 +91,41 @@ async function run() {
 
         })
 
+        app.get('/allClasses/:id', async (req, res) => {
+
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await allClassesCollection.findOne(query);
+            res.send(result);
+
+
+        })
+
         app.post('/allClasses', async (req, res) => {
             const addClasses = req.body;
             const result = await allClassesCollection.insertOne(addClasses)
+            res.send(result);
+
+        })
+        app.patch('/allClasses/:id', async (req, res) => {
+            const id = req.params.id
+            const classes = req.body;
+            const filter = { _id: new ObjectId(id) };
+            const updateClasses = {
+                $set: {
+
+                    name: classes.name,
+                    image: classes.image,
+                    instructor_name: classes.instructor_name,
+                    instructor_email: classes.instructor_email,
+                    available_seats: classes.available_seats,
+                    price: classes.price,
+                    descriptions: classes.descriptions,
+                }
+            }
+
+
+            const result = await allClassesCollection.updateOne(filter, updateClasses)
             res.send(result);
 
         })
