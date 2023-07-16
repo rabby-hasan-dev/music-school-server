@@ -344,9 +344,11 @@ async function run() {
             let query = {};
             if (req.query?.email) {
                 query = { email: req.query.email }
-                const result = await paymentCollection.find(query).toArray();
+                const result = await paymentCollection.find(query).sort({Date: -1}).toArray();
                 return res.send(result);
             }
+
+           
             const result = await paymentCollection.find().toArray();
             res.send(result);
 
