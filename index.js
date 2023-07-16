@@ -264,7 +264,7 @@ async function run() {
         })
 
         // admin related api
-        app.get('/allUsers/admin/:email', verifyJWT, async (req, res) => {
+        app.get('/allUsers/admin/:email', verifyJWT,verifyAdmin, async (req, res) => {
             const email = req.params.email;
 
 
@@ -279,7 +279,7 @@ async function run() {
         })
 
 
-        app.patch('/allUsers/admin/:id', async (req, res) => {
+        app.patch('/allUsers/admin/:id',verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) }
             const updateDoc = {
@@ -339,7 +339,7 @@ async function run() {
 
         // payment related api
 
-        app.get('/payments', async (req, res) => {
+        app.get('/payments',verifyJWT, async (req, res) => {
 
             let query = {};
             if (req.query?.email) {
