@@ -48,7 +48,7 @@ async function run() {
         await client.connect();
 
         const allClassesCollection = client.db("musicSchool").collection('allClasses');
-        const allInstructorsCollection = client.db("musicSchool").collection('all_Instructors');
+       
         const allUsersCollection = client.db("musicSchool").collection('allUsers');
         const selectedClassCollection = client.db("musicSchool").collection('selected_class');
         const paymentCollection = client.db("musicSchool").collection('payments');
@@ -127,44 +127,63 @@ async function run() {
             res.send(result);
         })
 
-            // approved api
-            app.patch('/allClasses/approved/:id', async (req, res) => {
-                const id = req.params.id
+        // approved api
+        app.patch('/allClasses/approved/:id', async (req, res) => {
+            const id = req.params.id
 
-                const filter = { _id: new ObjectId(id) };
-                const approvedClass = {
-                    $set: {
-                        status: "approved",
+            const filter = { _id: new ObjectId(id) };
+            const approvedClass = {
+                $set: {
+                    status: "approved",
 
-                    }
                 }
+            }
 
 
             const result = await allClassesCollection.updateOne(filter, approvedClass)
             res.send(result);
 
         })
-            // deny api
-            app.patch('/allClasses/deny/:id', async (req, res) => {
-                const id = req.params.id
+        // deny api
+        app.patch('/allClasses/deny/:id', async (req, res) => {
+            const id = req.params.id
 
-                const filter = { _id: new ObjectId(id) };
-                const denyClass = {
-                    $set: {
-                        status: "denied",
+            const filter = { _id: new ObjectId(id) };
+            const denyClass = {
+                $set: {
+                    status: "denied",
 
-                    }
                 }
+            }
 
 
             const result = await allClassesCollection.updateOne(filter, denyClass)
             res.send(result);
 
         })
-        // instructor related api
-        app.get('/allInstructors', async (req, res) => {
+        // feedBack api
+        app.patch('/allClasses/feedBack/:id', async (req, res) => {
+            const id = req.params.id
+            const feedBackData = req.body;
+            const filter = { _id: new ObjectId(id) };
+            const feedBackClass = {
+                $set: {
+                    feedBack: feedBackData.feedBack
 
-            const result = await allInstructorsCollection.find().toArray();
+                }
+            }
+
+
+            const result = await allClassesCollection.updateOne(filter, feedBackClass)
+            res.send(result);
+
+        })
+        // instructor related api
+       
+
+        app.get('/allInstructors', async (req, res) => {
+            const query={ role:"instructor"}
+            const result = await allUsersCollection.find(query).toArray();
             res.send(result);
 
         })
@@ -189,6 +208,19 @@ async function run() {
 
         app.post('/selectedClass', async (req, res) => {
             const SelectedClasses = req.body;
+            const query = {
+                $and: [
+                    { classId: SelectedClasses.classId },
+                    { email: SelectedClasses.email }
+                ]
+            }
+
+            const existingClass = await selectedClassCollection.findOne(query);
+
+            if (existingClass) {
+                return res.send({ message: ' class already exists' })
+            }
+
             const result = await selectedClassCollection.insertOne(SelectedClasses)
             res.send(result);
 
