@@ -12,7 +12,6 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 const verifyJWT = (req, res, next) => {
-    // console.log(req.headers);
     const authorization = req.headers.authorization;
     if (!authorization) {
         return res.status(401).send({ error: true, message: 'unauthorized access' });
@@ -20,6 +19,7 @@ const verifyJWT = (req, res, next) => {
     // bearer token
     const token = authorization.split(' ')[1];
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRETE, (error, decoded) => {
+       
         if (error) {
             return res.status(401).send({ error: true, message: 'unauthorized access' })
         }
@@ -48,7 +48,7 @@ async function run() {
         await client.connect();
 
         const allClassesCollection = client.db("musicSchool").collection('allClasses');
-       
+
         const allUsersCollection = client.db("musicSchool").collection('allUsers');
         const selectedClassCollection = client.db("musicSchool").collection('selected_class');
         const paymentCollection = client.db("musicSchool").collection('payments');
@@ -56,7 +56,7 @@ async function run() {
         // jwt api
         app.post('/jwt', (req, res) => {
             const user = req.body;
-            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRETE, { expiresIn: '1h' })
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRETE, { expiresIn: '1 hr' })
             res.send({ token });
         })
         //  warning: use verifyJWT before using verifyAdmin
@@ -65,13 +65,15 @@ async function run() {
             const query = { email: email };
             const user = await allUsersCollection.findOne(query);
             if (user?.role !== 'admin') {
-                return res.status(403).send({ error: true, message: 'forbidden access' })
+                return res.status(200).send({ error: true, message: 'forbidden access' })
             }
 
             next();
 
 
         }
+
+
 
 
         // Class relate api
@@ -85,11 +87,14 @@ async function run() {
                 const result = await allClassesCollection.find(query).toArray();
                 return res.send(result);
             }
+
             const result = await allClassesCollection.find().toArray();
             res.send(result);
 
 
         })
+
+
 
         app.get('/allClasses/:id', async (req, res) => {
 
@@ -103,6 +108,7 @@ async function run() {
 
         app.post('/allClasses', async (req, res) => {
             const addClasses = req.body;
+
             const result = await allClassesCollection.insertOne(addClasses)
             res.send(result);
 
@@ -128,6 +134,7 @@ async function run() {
         })
 
         // approved api
+
         app.patch('/allClasses/approved/:id', async (req, res) => {
             const id = req.params.id
 
@@ -145,6 +152,7 @@ async function run() {
 
         })
         // deny api
+
         app.patch('/allClasses/deny/:id', async (req, res) => {
             const id = req.params.id
 
@@ -162,6 +170,7 @@ async function run() {
 
         })
         // feedBack api
+
         app.patch('/allClasses/feedBack/:id', async (req, res) => {
             const id = req.params.id
             const feedBackData = req.body;
@@ -179,10 +188,10 @@ async function run() {
 
         })
         // instructor related api
-       
+
 
         app.get('/allInstructors', async (req, res) => {
-            const query={ role:"instructor"}
+            const query = { role: "instructor" }
             const result = await allUsersCollection.find(query).toArray();
             res.send(result);
 
@@ -264,7 +273,8 @@ async function run() {
         })
 
         // admin related api
-        app.get('/allUsers/admin/:email', verifyJWT,verifyAdmin, async (req, res) => {
+        app.get('/allUsers/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
+            
             const email = req.params.email;
 
 
@@ -279,7 +289,7 @@ async function run() {
         })
 
 
-        app.patch('/allUsers/admin/:id',verifyAdmin, async (req, res) => {
+        app.patch('/allUsers/admin/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) }
             const updateDoc = {
@@ -339,16 +349,16 @@ async function run() {
 
         // payment related api
 
-        app.get('/payments',verifyJWT, async (req, res) => {
+        app.get('/payments', verifyJWT, async (req, res) => {
 
             let query = {};
             if (req.query?.email) {
                 query = { email: req.query.email }
-                const result = await paymentCollection.find(query).sort({Date: -1}).toArray();
+                const result = await paymentCollection.find(query).sort({ Date: -1 }).toArray();
                 return res.send(result);
             }
 
-           
+
             const result = await paymentCollection.find().toArray();
             res.send(result);
 
@@ -359,11 +369,12 @@ async function run() {
 
             const query = {
                 _id: {
-                    $in: payment.selectedClassId
+                    $in: payment.selectClassId
                         .map(id => new ObjectId(id))
                 }
             }
-            const deleteResult = await selectedClassCollection.deleteMany(query);
+           
+            const deleteResult = await selectedClassCollection.deleteOne(query);
             res.send({ insertResult, deleteResult });
         })
 
