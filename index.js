@@ -19,7 +19,7 @@ const verifyJWT = (req, res, next) => {
     // bearer token
     const token = authorization.split(' ')[1];
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRETE, (error, decoded) => {
-       
+
         if (error) {
             return res.status(401).send({ error: true, message: 'unauthorized access' })
         }
@@ -274,7 +274,7 @@ async function run() {
 
         // admin related api
         app.get('/allUsers/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
-            
+
             const email = req.params.email;
 
 
@@ -373,9 +373,23 @@ async function run() {
                         .map(id => new ObjectId(id))
                 }
             }
-           
+
             const deleteResult = await selectedClassCollection.deleteOne(query);
-            res.send({ insertResult, deleteResult });
+            
+            const filter= {
+                _id: {
+                    $in: payment.classId.map(id => new ObjectId(id))
+                }
+            }
+            
+            const increments = {
+                $inc: { available_seats: -1 }
+            }
+
+
+            const incrementsSeatData = await allClassesCollection.updateOne(filter,increments)
+
+            res.send({ insertResult, deleteResult,incrementsSeatData });
         })
 
 
