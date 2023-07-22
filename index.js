@@ -273,7 +273,7 @@ async function run() {
         })
 
         // admin related api
-        app.get('/allUsers/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
+        app.get('/allUsers/admin/:email', verifyJWT, async (req, res) => {
 
             const email = req.params.email;
 
@@ -363,33 +363,26 @@ async function run() {
             res.send(result);
 
         })
-        app.post('/payments', async (req, res) => {
+
+        app.post('/payments', verifyJWT, async (req, res) => {
             const payment = req.body;
             const insertResult = await paymentCollection.insertOne(payment);
 
-            const query = {
-                _id: {
-                    $in: payment.selectClassId
-                        .map(id => new ObjectId(id))
-                }
-            }
+            const query = { _id: new ObjectId(payment?.selectClassId) }
 
             const deleteResult = await selectedClassCollection.deleteOne(query);
-            
-            const filter= {
-                _id: {
-                    $in: payment.classId.map(id => new ObjectId(id))
-                }
-            }
-            
+
+            const filter = { _id: new ObjectId(payment?.classId) }
+
+
             const increments = {
                 $inc: { available_seats: -1 }
             }
 
 
-            const incrementsSeatData = await allClassesCollection.updateOne(filter,increments)
+            const incrementsSeatData = await allClassesCollection.updateOne(filter, increments)
 
-            res.send({ insertResult, deleteResult,incrementsSeatData });
+            res.send({ insertResult, deleteResult, incrementsSeatData });
         })
 
 
