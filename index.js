@@ -374,15 +374,25 @@ async function run() {
 
             const filter = { _id: new ObjectId(payment?.classId) }
 
-
             const increments = {
-                $inc: { available_seats: -1 }
+                $inc: { available_seats: -1, total_enroll: 1 },
+
             }
 
 
-            const incrementsSeatData = await allClassesCollection.updateOne(filter, increments)
+            const incrementsSeatData = await allClassesCollection.updateOne(filter, increments);
 
-            res.send({ insertResult, deleteResult, incrementsSeatData });
+            const instructorFilter = { email: new ObjectId(payment?.email) }
+            const instructorClassIncrements = {
+                $inc: { total_enroll_students: 1 },
+
+            }
+
+            const instructorIncrementData = await allClassesCollection.updateOne(instructorFilter, instructorClassIncrements)
+
+
+
+            res.send({ insertResult, deleteResult, incrementsSeatData, instructorIncrementData });
         })
 
 
