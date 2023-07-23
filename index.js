@@ -372,6 +372,8 @@ async function run() {
 
             const deleteResult = await selectedClassCollection.deleteOne(query);
 
+            // class enroll student
+
             const filter = { _id: new ObjectId(payment?.classId) }
 
             const increments = {
@@ -382,13 +384,15 @@ async function run() {
 
             const incrementsSeatData = await allClassesCollection.updateOne(filter, increments);
 
-            const instructorFilter = { email: new ObjectId(payment?.email) }
+            // instructors student enroll
+
+            const instructorFilter = { email: payment?.instructorEmail }
             const instructorClassIncrements = {
                 $inc: { total_enroll_students: 1 },
 
             }
 
-            const instructorIncrementData = await allClassesCollection.updateOne(instructorFilter, instructorClassIncrements)
+            const instructorIncrementData = await allUsersCollection.updateOne(instructorFilter, instructorClassIncrements)
 
 
 
