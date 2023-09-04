@@ -51,6 +51,7 @@ async function run() {
 
         const allUsersCollection = client.db("musicSchool").collection('allUsers');
         const selectedClassCollection = client.db("musicSchool").collection('selected_class');
+        const reviewsCollection = client.db("musicSchool").collection('reviews');
         const paymentCollection = client.db("musicSchool").collection('payments');
 
         // jwt api
@@ -187,6 +188,12 @@ async function run() {
             res.send(result);
 
         })
+
+        // reviews related api
+        app.get('/reviews',async (req,res)=>{
+            const result=await reviewsCollection.find().toArray();
+            res.send(result);
+        })
         // instructor related api
 
 
@@ -289,7 +296,7 @@ async function run() {
         })
 
 
-        app.patch('/allUsers/admin/:id', verifyJWT, async (req, res) => {
+        app.patch('/allUsers/admin/:id', async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) }
             const updateDoc = {
