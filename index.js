@@ -88,8 +88,8 @@ async function run() {
                 const result = await allClassesCollection.find(query).toArray();
                 return res.send(result);
             }
-
-            const result = await allClassesCollection.find().toArray();
+            
+            const result = await allClassesCollection.find({status:"approved" }).toArray();
             res.send(result);
 
 
