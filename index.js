@@ -88,9 +88,18 @@ async function run() {
                 const result = await allClassesCollection.find(query).toArray();
                 return res.send(result);
             }
-            
-            const result = await allClassesCollection.find({status:"approved" }).toArray();
+
+            const result = await allClassesCollection.find().toArray();
             res.send(result);
+
+
+        })
+
+        app.get('/classes', async (req, res) => {
+
+            const result = await allClassesCollection.find({ status: "approved" }).toArray();
+            res.send(result);
+
 
 
         })
@@ -190,8 +199,8 @@ async function run() {
         })
 
         // reviews related api
-        app.get('/reviews',async (req,res)=>{
-            const result=await reviewsCollection.find().toArray();
+        app.get('/reviews', async (req, res) => {
+            const result = await reviewsCollection.find().toArray();
             res.send(result);
         })
         // instructor related api
